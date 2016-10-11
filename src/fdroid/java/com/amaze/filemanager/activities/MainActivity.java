@@ -146,6 +146,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 
@@ -410,7 +411,7 @@ public class MainActivity extends BaseActivity implements OnRequestPermissionsRe
         }
         //recents header color implementation
         if (Build.VERSION.SDK_INT >= 21) {
-            ActivityManager.TaskDescription taskDescription = new ActivityManager.TaskDescription("Amaze",
+            ActivityManager.TaskDescription taskDescription = new ActivityManager.TaskDescription(getResources().getString(R.string.app_name),
                     ((BitmapDrawable) getResources().getDrawable(R.mipmap.ic_launcher)).getBitmap(),
                     Color.parseColor((currentTab == 1 ? skinTwo : skin)));
             ((Activity) this).setTaskDescription(taskDescription);
@@ -437,6 +438,10 @@ public class MainActivity extends BaseActivity implements OnRequestPermissionsRe
         final String rawSecondaryStoragesStr = System.getenv("SECONDARY_STORAGE");
         // Primary emulated SD-CARD
         final String rawEmulatedStorageTarget = System.getenv("EMULATED_STORAGE_TARGET");
+        //SdCard
+        final String sdcard = "/storage/sdcard1";
+        if (BaseActivity.rootMode)
+            rv.add("/");
         if (TextUtils.isEmpty(rawEmulatedStorageTarget)) {
             // Device has physical external storage; use plain paths.
             if (TextUtils.isEmpty(rawExternalStorage)) {
@@ -470,6 +475,7 @@ public class MainActivity extends BaseActivity implements OnRequestPermissionsRe
                 rv.add(rawEmulatedStorageTarget + File.separator + rawUserId);
             }
         }
+
         // Add all secondary storages
         if (!TextUtils.isEmpty(rawSecondaryStoragesStr)) {
             // All Secondary SD-CARDs splited into array
@@ -486,8 +492,11 @@ public class MainActivity extends BaseActivity implements OnRequestPermissionsRe
                     rv.add(s);
             }
         }
-        if (BaseActivity.rootMode)
-            rv.add("/");
+
+
+        File sd = getSDDrive();
+        if (sd != null && !rv.contains(sd.getPath())) rv.add(sd.getPath());
+
         File usb = getUsbDrive();
         if (usb != null && !rv.contains(usb.getPath())) rv.add(usb.getPath());
         return rv;
@@ -803,7 +812,7 @@ public class MainActivity extends BaseActivity implements OnRequestPermissionsRe
             return true;
         }
         if (f.contains("TabFragment")) {
-            setActionBarTitle("Amaze");
+            setActionBarTitle(getResources().getString(R.string.app_name));
             if (aBoolean) {
                 s.setTitle(getResources().getString(R.string.gridview));
             } else {
@@ -1331,6 +1340,27 @@ public class MainActivity extends BaseActivity implements OnRequestPermissionsRe
         if (parent.exists() && parent.canExecute())
             return (parent);
         parent = new File("/mnt/sdcard/usb_storage");
+        if (parent.exists() && parent.canExecute())
+            return parent;
+
+        return null;
+    }
+    public File getSDDrive() {
+        File parent;
+        parent = new File("/storage");
+
+        try {
+            for (File f : parent.listFiles()) {
+                if (f.exists() && f.getName().toLowerCase().contains("sdcard1") && f.canExecute()) {
+                    return f;
+                }
+            }
+        } catch (Exception e) {
+        }
+        parent = new File("/mnt/sdcard2");
+        if (parent.exists() && parent.canExecute())
+            return (parent);
+        parent = new File("/mnt/sdcard2");
         if (parent.exists() && parent.canExecute())
             return parent;
 

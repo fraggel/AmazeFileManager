@@ -19,7 +19,6 @@
     
 -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
-<string name="app_name">Amaze File Manager</string>
 <string name="drawer_open">Apri navigazione</string>
 <string name="drawer_close">Chiudi navigazione</string>
 <string name="books">Segnalibri</string>

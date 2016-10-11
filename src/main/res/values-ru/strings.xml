@@ -373,7 +373,6 @@
     <string name="start_ftp">Старт</string>
     <string name="stop_ftp">Стоп</string>
     <string name="vietnamese_translation_title">Вьетнамский</string>
-    <string name="app_name">Amaze File Manager</string>
     <string name="blue_grey">Серо-голубой</string>
     <string name="cancel">ОТМЕНА</string>
     <string name="cantlistfiles">Невозможно показать список файлов без root прав</string>

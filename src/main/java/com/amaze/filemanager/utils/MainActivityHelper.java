@@ -84,7 +84,7 @@ public class MainActivityHelper {
         public void onReceive(Context context, Intent intent) {
             if (intent != null) {
                 if (intent.getAction().equals(Intent.ACTION_MEDIA_MOUNTED)) {
-                    Toast.makeText( mainActivity, "Media Mounted", Toast.LENGTH_SHORT).show();
+                    Toast.makeText( mainActivity, context.getResources().getString(R.string.media_mounted), Toast.LENGTH_SHORT).show();
                     String a = intent.getData().getPath();
                     if (a != null && a.trim().length() != 0 && new File(a).exists() && new File(a).canExecute()) {
                         DataUtils.storages.add(a);

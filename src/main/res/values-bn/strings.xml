@@ -31,7 +31,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 <resources
         xmlns:tools="http://schemas.android.com/tools"
         tools:ignore="MissingTranslation">
-        <string name="app_name">এ্যামেজ ফাইল ম্যানেজার</string>
 
         <string name="drawer_open">নেভিগেশান ড্রয়ার খুলুন</string>
 

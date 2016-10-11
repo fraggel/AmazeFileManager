@@ -143,7 +143,7 @@ public class Preffrag extends PreferenceFragment{
         });
 
         // Feedback
-        Preference preference3 = (Preference) findPreference("feedback");
+        /*Preference preference3 = (Preference) findPreference("feedback");
         preference3.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
@@ -153,17 +153,17 @@ public class Preffrag extends PreferenceFragment{
                 startActivity(Intent.createChooser(emailIntent, getResources().getString(R.string.feedback)));
                 return false;
             }
-        });
+        });*/
 
         // About
-        Preference aboutPreference = findPreference(PREFERENCE_KEY_ABOUT);
+        /*Preference aboutPreference = findPreference(PREFERENCE_KEY_ABOUT);
         aboutPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
                 startActivity(new Intent(getActivity(), AboutActivity.class));
                 return false;
             }
-        });
+        });*/
 
         // G+
         gplus = (CheckBx) findPreference("plus_pic");

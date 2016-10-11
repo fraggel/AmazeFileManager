@@ -22,7 +22,6 @@
 <resources
     xmlns:tools="http://schemas.android.com/tools"
     tools:ignore="MissingTranslation">
-    <string name="app_name">Amaze File Manager</string>
     <string name="drawer_open">네비게이션 창 열기</string>
     <string name="drawer_close">네비게이션 창 닫기</string>
     <string name="books">북마크</string>

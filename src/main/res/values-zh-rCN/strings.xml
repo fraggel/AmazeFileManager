@@ -22,7 +22,6 @@
 <resources
     xmlns:tools="http://schemas.android.com/tools"
     tools:ignore="MissingTranslation">
-    <string name="app_name">文件管理</string>
     <string name="drawer_open">打开导航抽屉</string>
     <string name="drawer_close">关闭导航抽屉</string>
     <string name="books">书签</string>

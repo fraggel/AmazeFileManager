@@ -463,6 +463,7 @@ public class MainActivity extends BaseActivity implements
         final String rawSecondaryStoragesStr = System.getenv("SECONDARY_STORAGE");
         // Primary emulated SD-CARD
         final String rawEmulatedStorageTarget = System.getenv("EMULATED_STORAGE_TARGET");
+        final String sdcard = "/storage/sdcard1";
         if (TextUtils.isEmpty(rawEmulatedStorageTarget)) {
             // Device has physical external storage; use plain paths.
             if (TextUtils.isEmpty(rawExternalStorage)) {
@@ -495,6 +496,9 @@ public class MainActivity extends BaseActivity implements
             } else {
                 rv.add(rawEmulatedStorageTarget + File.separator + rawUserId);
             }
+        }
+        if (!TextUtils.isEmpty(sdcard)) {
+            rv.add("/storage/sdcard1");
         }
         // Add all secondary storages
         if (!TextUtils.isEmpty(rawSecondaryStoragesStr)) {

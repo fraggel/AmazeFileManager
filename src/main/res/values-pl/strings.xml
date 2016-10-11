@@ -22,7 +22,6 @@
 <resources
     xmlns:tools="http://schemas.android.com/tools"
     tools:ignore="MissingTranslation">
-    <string name="app_name">Amaze File Manager</string>
     <string name="drawer_open">Otwórz pasek nawigacji</string>
     <string name="drawer_close">Zamknij pasek nawigacji</string>
     <string name="books">Zakładki</string>
