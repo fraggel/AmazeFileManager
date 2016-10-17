@@ -202,9 +202,15 @@ public class TextReader extends BaseActivity
         }
         String fileName=null;
         try {
-            if (uri.getScheme().equals("file")) {
+            if(uri.getScheme() == null)
+            {
+                String sUri = uri.getPath();
+                sUri = "file://" + sUri;                                                            //Force the schema to be "file" if not set
+                uri = Uri.parse(sUri);
+            }
+            if (uri.getScheme().equals("file"))
                 fileName = uri.getLastPathSegment();
-            } else {
+            else {
                 Cursor cursor = null;
                 try {
                     cursor = getContentResolver().query(uri, new String[]{
@@ -656,8 +662,7 @@ public class TextReader extends BaseActivity
 
                     // highlighting previous element in list
                     Map.Entry keyValueNew = (Map.Entry) nodes.get(--mCurrent).getKey();
-                    mInput.getText().setSpan(new BackgroundColorSpan(getResources()
-                                    .getColor(R.color.search_text_highlight, getTheme())),
+                    mInput.getText().setSpan(new BackgroundColorSpan(getResources().getColor(R.color.search_text_highlight)),
                             (Integer) keyValueNew.getKey(),
                             (Integer) keyValueNew.getValue(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
 
@@ -682,8 +687,7 @@ public class TextReader extends BaseActivity
                     }
 
                     Map.Entry keyValueNew = (Map.Entry) nodes.get(++mCurrent).getKey();
-                    mInput.getText().setSpan(new BackgroundColorSpan(getResources()
-                                    .getColor(R.color.search_text_highlight, getTheme())),
+                    mInput.getText().setSpan(new BackgroundColorSpan(getResources().getColor(R.color.search_text_highlight)),
                             (Integer) keyValueNew.getKey(),
                             (Integer) keyValueNew.getValue(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
 
