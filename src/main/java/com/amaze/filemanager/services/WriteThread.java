@@ -86,6 +86,7 @@ public class WriteThread extends Thread {
                 try {
                     //write bytes
                     out.write(bytes);
+                    out.flush();
                     this.length+=length;
                     //calculate progress
                     if((elapsedTime=System.currentTimeMillis()/1000-lasttime)>=1){

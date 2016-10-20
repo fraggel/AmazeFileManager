@@ -4,6 +4,8 @@ import android.util.Log;
 
 import com.amaze.filemanager.utils.NoMoreFilesException;
 
+import org.apache.commons.compress.utils.IOUtils;
+
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,7 +54,9 @@ public class ReadThread extends Thread{
             while (true) {
                 //Check if buffer has space
                 if(bufferHandler.canAdd()){
-                    if ((length = in.read(buffer = new byte[1024 * 60])) > 0) {
+                    buffer=IOUtils.toByteArray(in);
+                    length=buffer.length;
+                    if (length > 0) {
                         //read file
                         bufferHandler.add(currentID,buffer, length);
                         //update progress

@@ -220,6 +220,7 @@ public class MediaStoreHack {
                 while ((bytesRead = in.read(buffer)) != -1) {
                     out.write(buffer, 0, bytesRead);
                 }
+                out.flush();
             } finally {
                 out.close();
                 in.close();

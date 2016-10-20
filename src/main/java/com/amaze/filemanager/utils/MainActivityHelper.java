@@ -36,6 +36,7 @@ import com.amaze.filemanager.ui.dialogs.SmbSearchDialog;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by root on 11/22/15.
@@ -87,6 +88,7 @@ public class MainActivityHelper {
                     Toast.makeText( mainActivity, context.getResources().getString(R.string.media_mounted), Toast.LENGTH_SHORT).show();
                     String a = intent.getData().getPath();
                     if (a != null && a.trim().length() != 0 && new File(a).exists() && new File(a).canExecute()) {
+                        DataUtils.getStorages().remove(a);
                         DataUtils.storages.add(a);
                         mainActivity.refreshDrawer();
                     } else {

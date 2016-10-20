@@ -228,7 +228,7 @@ public class ExtractService extends Service {
                 if (hash.get(id)) {
                     outputStream.write(buf, 0, len);
                     copiedbytes=copiedbytes+len;
-
+                    outputStream.flush();
                     long time1=System.nanoTime()/500000000;
                     if(((int)time1)>((int)(time))){
                         calculateProgress(zipfile.getName(),id,false);
@@ -269,6 +269,7 @@ public class ExtractService extends Service {
                 //System.out.println(id + " " + hash.get(id));
                 if (hash.get(id)) {
                     outputStream.write(buf, 0, len);
+                    outputStream.flush();
                     copiedbytes=copiedbytes+len;
                     long time1=System.nanoTime()/500000000;
                     if(((int)time1)>((int)(time))){
@@ -308,6 +309,7 @@ public class ExtractService extends Service {
                 //System.out.println(id + " " + hash.get(id));
                 if (hash.get(id)) {
                     outputStream.write(buf, 0, len);
+                    outputStream.flush();
                     copiedbytes=copiedbytes+len;
                     long time1=System.nanoTime()/500000000;
                     if(((int)time1)>((int)(time))){

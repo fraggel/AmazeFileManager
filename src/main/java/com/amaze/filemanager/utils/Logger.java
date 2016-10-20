@@ -41,6 +41,7 @@ public class Logger {
                     BufferedWriter writer = new BufferedWriter(output);
                     writer.write(s1+"\n");
                     writer.write(sw.toString());
+                    writer.flush();
                     writer.close();
                     output.close();
                 } catch (IOException e) {

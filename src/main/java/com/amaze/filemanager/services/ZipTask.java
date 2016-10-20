@@ -301,6 +301,7 @@ boolean foreground=true;
                 while ((len = in.read(buf)) > 0) {
                     if (hash.get(id)) {
                         zos.write(buf, 0, len);
+                        zos.flush();
                         size += len;
                         int p=(int) ((size / (float) totalBytes) * 100);
                         if(p!=lastpercent || lastpercent==0) {

@@ -319,6 +319,7 @@ public class TextReader extends BaseActivity
                     output = new FileWriter(f.getPath());
                     BufferedWriter writer = new BufferedWriter(output);
                     writer.write(s1);
+                    writer.flush();
                     writer.close();
                     output.close();
                 } catch (IOException e) {

@@ -311,7 +311,7 @@ public class CopyService extends Service {
                 if(!hash.get(id))return;
             } else {
                 if (!hash.get(id)) return;
-                System.out.println("Copy start for "+targetFile.getName());
+                Log.e("Copy","Copy start for "+targetFile.getName());
                 bufferHandler.addFile(sourceFile, targetFile);
                 if(readThread==null){
                     readThread=new ReadThread(bufferHandler,progressHandler);

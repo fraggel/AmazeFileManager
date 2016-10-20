@@ -97,6 +97,7 @@ public abstract class FileUtil {
                     while ((bytesRead = inStream.read(buffer)) != -1) {
                         outStream.write(buffer, 0, bytesRead);
                     }
+                    outStream.flush();
                 }
 
             }
@@ -745,6 +746,7 @@ public abstract class FileUtil {
                 while ((bytesRead = in.read(buffer)) != -1) {
                     out.write(buffer, 0, bytesRead);
                 }
+                out.flush();
             }
             finally {
                 if (in != null) {
@@ -955,6 +957,7 @@ public abstract class FileUtil {
                     while ((bytesRead = in.read(buffer)) != -1) {
                         out.write(buffer, 0, bytesRead);
                     }
+                    out.flush();
                 } finally {
                     if (in != null) {
                         try {

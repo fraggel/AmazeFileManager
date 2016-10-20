@@ -85,6 +85,8 @@ private void unzipEntry1(ZipFile zipfile, ZipEntry entry, String outputDir)
 
                 outputStream.write(buf, 0, len);
             }
+            outputStream.flush();
+
         } finally {
             outputStream.close();
             inputStream.close();

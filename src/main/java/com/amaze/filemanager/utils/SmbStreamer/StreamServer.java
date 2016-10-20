@@ -392,8 +392,11 @@ public abstract class StreamServer
                 {
                     rlen = is.read(buf, 0, 512);
                     size -= rlen;
-                    if (rlen > 0)
+                    if (rlen > 0) {
                         f.write(buf, 0, rlen);
+                        f.flush();
+                    }
+
                 }
 
                 // Get the raw body as a byte []
@@ -662,6 +665,7 @@ public abstract class StreamServer
                     File temp = File.createTempFile("NanoHTTPD", "", new File(tmpdir));
                     OutputStream fstream = new FileOutputStream(temp);
                     fstream.write(b, offset, len);
+                    fstream.flush();
                     fstream.close();
                     path = temp.getAbsolutePath();
                 } catch (Exception e) { // Catch exception if any
@@ -801,6 +805,7 @@ public abstract class StreamServer
                     while ((read = data.read(buff))>0){
                         //if(SolidExplorer.LOG)Log.d("Explorer", "Read: "+ read +", pending: "+ data.available());
                         out.write( buff, 0, read );
+                        out.flush();
                     }
                 }
                 out.flush();
