@@ -85,7 +85,13 @@ public class WriteThread extends Thread {
             if (bytes != null && length > 0)
                 try {
                     //write bytes
-                    out.write(bytes);
+                    if(bytes.length>length){
+                        for(int x=0;x<length;x++) {
+                            out.write(bytes[x]);
+                        }
+                    }else{
+                        out.write(bytes);
+                    }
                     out.flush();
                     this.length+=length;
                     //calculate progress

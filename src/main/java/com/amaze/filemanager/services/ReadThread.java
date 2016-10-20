@@ -7,6 +7,7 @@ import com.amaze.filemanager.utils.NoMoreFilesException;
 import org.apache.commons.compress.utils.IOUtils;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -49,14 +50,14 @@ public class ReadThread extends Thread{
             return;
         }
         int length;
+        int longitud;
         byte[] buffer;
         try {
             while (true) {
                 //Check if buffer has space
                 if(bufferHandler.canAdd()){
-                    buffer=IOUtils.toByteArray(in);
-                    length=buffer.length;
-                    if (length > 0) {
+                        buffer = new byte[1024 * 512];
+                    if ((length = in.read(buffer)) > 0) {
                         //read file
                         bufferHandler.add(currentID,buffer, length);
                         //update progress
