@@ -22,7 +22,7 @@
     <string name="books">Marcadores</string>
     <string name="icon">icono</string>
     <string name="efn">Introduce el nombre del archivo</string>
-    <string name="storage">Almacenamiento</string>
+    <string name="storage">Memoria interna</string>
     <string name="gallery">Galería</string>
     <string name="apps">Administrador de Apps</string>
     <string name="bookmanag">Administrador de favoritos</string>
@@ -280,7 +280,8 @@
     <string name="donate">Donar</string>
     <string name="dutch_translation_title">Alemán</string>
     <string name="edit">Editar</string>
-    <string name="extstorage">Almacenamiento externo</string>
+    <string name="extstorage">Tarjeta SD</string>
+    <string name="usbstorage">Memoria USB</string>
     <string name="fab_skin">Tema del botón flotante</string>
     <string name="file_empty">El fichero está vacío</string>
     <string name="files">Ficheros</string>

@@ -353,6 +353,7 @@
     <string name="anonymous">Anonymous</string>
     <string name="bluetooth">Bluetooth</string>
     <string name="extstorage">External Storage</string>
+    <string name="usbstorage">USB Storage</string>
     <string name="folders">Folders</string>
     <string name="videos">Videos</string>
     <string name="apks">Apks</string>

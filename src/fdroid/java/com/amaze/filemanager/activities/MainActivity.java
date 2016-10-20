@@ -1384,7 +1384,9 @@ public class MainActivity extends BaseActivity implements OnRequestPermissionsRe
             } else if ("/".equals(file)) {
                 name = getResources().getString(R.string.rootdirectory);
                 icon1 = ContextCompat.getDrawable(this, R.drawable.ic_drawer_root_white);
-            } else name = f.getName();
+            } else if ("/storage/usbotg".equals(file)) {
+                name = getResources().getString(R.string.usbstorage);
+            }else name = f.getName();
             if (!f.isDirectory() || f.canExecute()) {
                 storage_count++;
                 list.add(new EntryItem(name, file, icon1));

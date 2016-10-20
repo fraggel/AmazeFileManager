@@ -95,8 +95,13 @@ public class MainActivityHelper {
                         mainActivity.refreshDrawer();
                     }
                 } else if (intent.getAction().equals(Intent.ACTION_MEDIA_UNMOUNTED)) {
-
-                    mainActivity.refreshDrawer();
+                    String a = intent.getData().getPath();
+                    if (a != null && a.trim().length() != 0 && new File(a).exists() && new File(a).canExecute()) {
+                        DataUtils.getStorages().remove(a);
+                        mainActivity.refreshDrawer();
+                    } else {
+                        mainActivity.refreshDrawer();
+                    }
                 }
             }
         }
