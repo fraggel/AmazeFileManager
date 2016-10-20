@@ -339,6 +339,7 @@
     <string name="files">Files</string>
     <string name="directories">Directories</string>
     <string name="textreader">Text Reader</string>
+    <string name="texteditor">Text Editor</string>
     <string name="databasereader">Database Reader</string>
     <string name="showDividers">Show Dividers</string>
     <string name="topFab">FAB on App bar</string>
@@ -403,7 +404,7 @@
     <string name="start_ftp">Start</string>
     <string name="media_mounted">Media Mounted</string>
     <string name="stop_ftp">Stop</string>
-    <string name="ftp_status_running">Running</string>
+    <string name="ftp_status_running">Running\User:anonymous\nWithout password</string>
     <string name="ftp_status_not_running">Not Running</string>
     <string name="ftp_no_wifi">Make sure you\'re connected to WiFi</string>
     <string name="domain">Domain</string>

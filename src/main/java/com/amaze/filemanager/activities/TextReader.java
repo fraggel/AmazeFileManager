@@ -344,7 +344,7 @@ public class TextReader extends BaseActivity
                     @Override
                     public void run() {
 
-                        Toast.makeText(c, "Done", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(c, getResources().getString(R.string.done), Toast.LENGTH_SHORT).show();
                     }
                 });
             }

@@ -87,7 +87,7 @@
             android:name=".activities.TextReader"
 			android:theme="@style/appCompatLight">
             <intent-filter
-                android:label="Text Editor">
+                android:label="@string/texteditor">
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/*" />
