@@ -48,6 +48,7 @@ import com.amaze.filemanager.utils.DataPackage;
 import com.amaze.filemanager.utils.Futils;
 import com.amaze.filemanager.filesystem.HFile;
 import com.amaze.filemanager.filesystem.RootHelper;
+import com.amaze.filemanager.utils.GenericCopyThread;
 import com.stericson.RootTools.RootTools;
 
 import java.io.BufferedInputStream;
@@ -214,6 +215,7 @@ public class CopyService extends Service {
             if (utils.checkFolder((FILE2), c) == 1) {
                 final ProgressHandler progressHandler=new ProgressHandler(-1);
                 BufferHandler bufferHandler=new BufferHandler(c);
+                GenericCopyThread copyThread = new GenericCopyThread(c);
                 progressHandler.setProgressListener(new ProgressHandler.ProgressListener() {
                     @Override
                     public void onProgressed(String fileName, float p1, float p2, float speed, float avg) {
@@ -233,7 +235,7 @@ public class CopyService extends Service {
                                 continue;
                             }
                             HFile hFile=new HFile(mode,FILE2, files.get(i).getName(),f1.isDirectory());
-                            copyFiles((f1),hFile, bufferHandler,progressHandler, id, move);
+                            copyFiles((f1),hFile, bufferHandler, copyThread, progressHandler, id, move);
                         }
                         else{
                             break;
@@ -248,7 +250,7 @@ public class CopyService extends Service {
                     }
                 }
                 int i=1;
-                while(bufferHandler.writing){
+                while(bufferHandler.writing && copyThread.thread == null){
                     try {
                         if(i>5)i=5;
                         Thread.sleep(i*100);
@@ -256,6 +258,17 @@ public class CopyService extends Service {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+                }
+                // waiting for generic copy thread to finish before returning from this point
+                try {
+
+                    if (copyThread.thread!=null) {
+                        copyThread.thread.join();
+                        Log.d(getClass().getSimpleName(), "Thread alive: " + copyThread.thread.isAlive());
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    // thread interrupted for some reason, probably already been handled
                 }
             } else if (rootmode) {
                 boolean m = true;
@@ -290,7 +303,7 @@ public class CopyService extends Service {
             return b;
         }
 
-        private void copyFiles(final BaseFile sourceFile,final HFile targetFile,BufferHandler bufferHandler,ProgressHandler progressHandler,final int id,final boolean move) throws IOException {
+        private void copyFiles(final BaseFile sourceFile,final HFile targetFile,BufferHandler bufferHandler, GenericCopyThread copyThread, ProgressHandler progressHandler,final int id,final boolean move) throws IOException {
             Log.e("Copy",sourceFile.getPath());
             if (sourceFile.isDirectory()) {
                 if(!hash.get(id))return;
@@ -301,18 +314,18 @@ public class CopyService extends Service {
                     copy_successful=false;
                     return;
                 }
-                    targetFile.setLastModified(sourceFile.lastModified());
+                targetFile.setLastModified(sourceFile.lastModified());
                 if(!hash.get(id))return;
                 ArrayList<BaseFile> filePaths = sourceFile.listFiles(false);
                 for (BaseFile file : filePaths) {
                     HFile destFile = new HFile(targetFile.getMode(),targetFile.getPath(), file.getName(),file.isDirectory());
-                    copyFiles(file, destFile,bufferHandler,progressHandler, id, move);
+                    copyFiles(file, destFile,bufferHandler, copyThread, progressHandler, id, move);
                 }
                 if(!hash.get(id))return;
             } else {
                 if (!hash.get(id)) return;
                 Log.e("Copy","Copy start for "+targetFile.getName());
-                bufferHandler.addFile(sourceFile, targetFile);
+                /**bufferHandler.addFile(sourceFile, targetFile);
                 if(readThread==null){
                     readThread=new ReadThread(bufferHandler,progressHandler);
                     readThread.start();
@@ -320,7 +333,18 @@ public class CopyService extends Service {
                 if(writeThread==null){
                     writeThread=new WriteThread(bufferHandler,progressHandler);
                     writeThread.start();
+                }**/
+
+                // start a new thread only after previous work is done
+                try {
+                    if (copyThread.thread!=null) copyThread.thread.join();
+                    copyThread.startThread(sourceFile, targetFile, progressHandler);
+                } catch (InterruptedException e) {
+                    // thread interrupted due to some problem. we must return
+                    failedFOps.add(sourceFile);
+                    copy_successful = false;
                 }
+
             }
         }
 

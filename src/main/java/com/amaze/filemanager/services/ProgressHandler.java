@@ -16,13 +16,13 @@ public class ProgressHandler {
         this.totalSize = totalSize;
     }
 
-    void addWrittenLength(long length, float speed) {
+    public void addWrittenLength(long length, float speed) {
         writtenSize += length;
         this.speed = speed;
         calculateProgress();
     }
 
-    void addReadLength(int length){
+    public void addReadLength(int length){
         readSize+=length;
     }
     public void setTotalSize(Long totalSize) {
