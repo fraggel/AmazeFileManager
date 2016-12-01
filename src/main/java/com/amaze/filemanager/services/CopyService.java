@@ -171,185 +171,180 @@ public class CopyService extends Service {
 
         }
 
-    class Copy {
+        class Copy {
 
-        long totalBytes = 0L, copiedBytes = 0L;
-        boolean calculatingTotalSize=false;
-        ArrayList<HFile> failedFOps;
-        ArrayList<BaseFile> toDelete;
-        boolean copy_successful;
-        ReadThread readThread;
-        WriteThread writeThread;
-        public Copy() {
-            copy_successful=true;
-            failedFOps=new ArrayList<>();
-            toDelete=new ArrayList<>();
-        }
+            long totalBytes = 0L;
+            boolean calculatingTotalSize=false;
+            ArrayList<HFile> failedFOps;
+            ArrayList<BaseFile> toDelete;
+            boolean copy_successful;
+            public Copy() {
+                copy_successful=true;
+                failedFOps=new ArrayList<>();
+                toDelete=new ArrayList<>();
+            }
 
-        long getTotalBytes(final ArrayList<BaseFile> files, final ProgressHandler progressHandler) {
-            calculatingTotalSize=true;
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    long totalBytes = 0l;
-                    try {
-                        for (int i = 0; i < files.size(); i++) {
-                            HFile f1 = (files.get(i));
-                            if (f1.isDirectory()) {
-                                totalBytes = totalBytes + f1.folderSize();
-                            } else {
-                                totalBytes = totalBytes + f1.length();
-                            }
-                        }
-                        progressHandler.setTotalSize(totalBytes);
-                    } catch (Exception e) {
-                    }
-                    Copy.this.totalBytes=totalBytes;
-                calculatingTotalSize=false;
-                }
-            }).run();
-
-            return totalBytes;
-        }
-        public void execute(final int id, final ArrayList<BaseFile> files, final String FILE2, final boolean move,int mode) {
-            if (utils.checkFolder((FILE2), c) == 1) {
-                final ProgressHandler progressHandler=new ProgressHandler(-1);
-                BufferHandler bufferHandler=new BufferHandler(c);
-                GenericCopyThread copyThread = new GenericCopyThread(c);
-                progressHandler.setProgressListener(new ProgressHandler.ProgressListener() {
+            long getTotalBytes(final ArrayList<BaseFile> files, final ProgressHandler progressHandler) {
+                calculatingTotalSize=true;
+                new Thread(new Runnable() {
                     @Override
-                    public void onProgressed(String fileName, float p1, float p2, float speed, float avg) {
-                        publishResults(fileName, (int) p1, (int) p2, id, progressHandler.totalSize, progressHandler.writtenSize, false, move);
-                        System.out.println(new File(fileName).getName() + " Progress " + p1 + " Secondary Progress " + p2 + " Speed " + speed + " Avg Speed " + avg);
-                    }
-                });
-                getTotalBytes(files, progressHandler);
-                for (int i = 0; i < files.size(); i++) {
-                    BaseFile f1 = (files.get(i));
-                    Log.e("Copy","basefile\t"+f1.getPath());
-                    try {
-
-                        if (hash.get(id)){
-                            if(!f1.isSmb() && !new File(files.get(i).getPath()).canRead() && rootmode){
-                                copyRoot(files.get(i).getPath(),files.get(i).getName(),FILE2,move);
-                                continue;
+                    public void run() {
+                        long totalBytes = 0l;
+                        try {
+                            for (int i = 0; i < files.size(); i++) {
+                                HFile f1 = (files.get(i));
+                                if (f1.isDirectory()) {
+                                    totalBytes = totalBytes + f1.folderSize();
+                                } else {
+                                    totalBytes = totalBytes + f1.length();
+                                }
                             }
-                            HFile hFile=new HFile(mode,FILE2, files.get(i).getName(),f1.isDirectory());
-                            copyFiles((f1),hFile, bufferHandler, copyThread, progressHandler, id, move);
+                            progressHandler.setTotalSize(totalBytes);
+                        } catch (Exception e) {
                         }
-                        else{
+                        Copy.this.totalBytes=totalBytes;
+                    calculatingTotalSize=false;
+                    }
+                }).run();
+
+                return totalBytes;
+            }
+            public void execute(final int id, final ArrayList<BaseFile> files, final String FILE2, final boolean move,int mode)
+            {
+                if (utils.checkFolder((FILE2), c) == 1) {
+                    final ProgressHandler progressHandler=new ProgressHandler(-1);
+                    BufferHandler bufferHandler=new BufferHandler(c);
+                    GenericCopyThread copyThread = new GenericCopyThread(c);
+                    progressHandler.setProgressListener(new ProgressHandler.ProgressListener() {
+                        @Override
+                        public void onProgressed(String fileName, float p1, float p2, float speed, float avg) {
+                            publishResults(fileName, (int) p1, (int) p2, id, progressHandler.totalSize, progressHandler.writtenSize, false, move);
+                            System.out.println(new File(fileName).getName() + " Progress " + p1 + " Secondary Progress " + p2 + " Speed " + speed + " Avg Speed " + avg);
+                        }
+                    });
+                    getTotalBytes(files, progressHandler);
+                    for (int i = 0; i < files.size(); i++) {
+                        BaseFile f1 = (files.get(i));
+                        Log.e("Copy","basefile\t"+f1.getPath());
+                        try {
+                            if (hash.get(id)){
+                                if(!f1.isSmb() && !new File(files.get(i).getPath()).canRead() && rootmode)  //Aquí entramos si el origen está en una carpeta que necesita root
+                                {
+                                    copyRoot(files.get(i).getPath(), files.get(i).getName(), FILE2, false);
+                                    bufferHandler.writing = false;                                  //Indica que hemos terminado la copia de ese archivo -no es un thread-
+                                    continue;
+                                }
+                                HFile hFile=new HFile(mode,FILE2, files.get(i).getName(),f1.isDirectory());
+                                copyFiles((f1),hFile, bufferHandler, copyThread, progressHandler, id);
+                            }
+                            else{
+                                break;
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Log.e("Copy","Got exception checkout");
+
+                            failedFOps.add(files.get(i));
+                            for(int j=i+1;j<files.size();j++)failedFOps.add(files.get(j));
                             break;
                         }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        Log.e("Copy","Got exception checkout");
-
-                        failedFOps.add(files.get(i));
-                        for(int j=i+1;j<files.size();j++)failedFOps.add(files.get(j));
-                        break;
                     }
-                }
-                int i=1;
-                while(bufferHandler.writing && copyThread.thread == null){
+                    int i=1;
+                    while(bufferHandler.writing && copyThread.thread == null){
+                        try {
+                            if(i>5)i=5;
+                            Thread.sleep(i*100);
+                            i++;
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    // waiting for generic copy thread to finish before returning from this point
                     try {
-                        if(i>5)i=5;
-                        Thread.sleep(i*100);
-                        i++;
+
+                        if (copyThread.thread!=null) {
+                            copyThread.thread.join();
+                            Log.d(getClass().getSimpleName(), "Thread alive: " + copyThread.thread.isAlive());
+                        }
                     } catch (InterruptedException e) {
                         e.printStackTrace();
+                        // thread interrupted for some reason, probably already been handled
                     }
                 }
-                // waiting for generic copy thread to finish before returning from this point
-                try {
-
-                    if (copyThread.thread!=null) {
-                        copyThread.thread.join();
-                        Log.d(getClass().getSimpleName(), "Thread alive: " + copyThread.thread.isAlive());
+                else if (rootmode)                                                                  //Cuando el destino es una carpeta que necesita root
+                {
+                    boolean m = true;
+                    for (int i = 0; i < files.size(); i++) {
+                        String path=files.get(i).getPath();
+                        String name=files.get(i).getName();
+                        copyRoot(path,name, FILE2, true);
+                        if(!checkFiles(new HFile(files.get(i).getMode(),path),new HFile(HFile.ROOT_MODE,FILE2+"/"+name))){
+                            failedFOps.add(files.get(i));
+                        }
                     }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    // thread interrupted for some reason, probably already been handled
-                }
-            } else if (rootmode) {
-                boolean m = true;
-                for (int i = 0; i < files.size(); i++) {
-                    String path=files.get(i).getPath();
-                    String name=files.get(i).getName();
-                    copyRoot(path,name,FILE2,move);
-                    if(checkFiles(new HFile(files.get(i).getMode(),path),new HFile(HFile.ROOT_MODE,FILE2+"/"+name))){
-                        failedFOps.add(files.get(i));
+                    if (move && m) {
+                        ArrayList<BaseFile> toDelete=new ArrayList<>();
+                        for(BaseFile a:files){
+                            if(!failedFOps.contains(a))
+                                toDelete.add(a);
+                        }
+                        new DeleteTask(getContentResolver(), c).execute((toDelete));
                     }
-                }
-                if (move && m) {
-                    ArrayList<BaseFile> toDelete=new ArrayList<>();
-                    for(BaseFile a:files){
-                        if(!failedFOps.contains(a))
-                            toDelete.add(a);
-                    }
-                    new DeleteTask(getContentResolver(), c).execute((toDelete));
-                }
 
 
-            } else {
-                for(BaseFile f:files)
-                    failedFOps.add(f);
+                } else {
+                    for(BaseFile f:files)
+                        failedFOps.add(f);
+                }
+            }
+
+
+
+            boolean copyRoot(String path,String name,String FILE2, boolean bRw)
+            {
+                String sSource = '"' + path + '"';                                                  //Atención: es necesario entrecomillar el nombre por si este contiene espacios
+                String sTargetPath = FILE2 + "/";
+                String sTarget  = sTargetPath + '"' + name + '"';
+
+                return RootTools.copyFile(sSource, sTarget, bRw, true);                             //Indicamos que deberá hacer un remount RW
+            }
+
+            private void copyFiles(final BaseFile sourceFile,final HFile targetFile,BufferHandler bufferHandler, GenericCopyThread copyThread, ProgressHandler progressHandler,final int id) throws IOException {
+                Log.e("Copy",sourceFile.getPath());
+                if (sourceFile.isDirectory()) {
+                    if(!hash.get(id))return;
+                    if (!targetFile.exists()) targetFile.mkdir(c);
+                    if(!targetFile.exists()){
+                        Log.e("Copy","cant make dir");
+                        failedFOps.add(sourceFile);
+                        copy_successful=false;
+                        return;
+                    }
+                    targetFile.setLastModified(sourceFile.lastModified());
+                    if(!hash.get(id))return;
+                    ArrayList<BaseFile> filePaths = sourceFile.listFiles(false);
+                    for (BaseFile file : filePaths) {
+                        HFile destFile = new HFile(targetFile.getMode(),targetFile.getPath(), file.getName(),file.isDirectory());
+                        copyFiles(file, destFile,bufferHandler, copyThread, progressHandler, id);
+                    }
+                    if(!hash.get(id))return;
+                } else {
+                    if (!hash.get(id)) return;
+                    Log.e("Copy","Copy start for "+targetFile.getName());
+
+                    // start a new thread only after previous work is done
+                    try {
+                        if (copyThread.thread!=null) copyThread.thread.join();
+                        copyThread.startThread(sourceFile, targetFile, progressHandler);
+                    } catch (InterruptedException e) {
+                        // thread interrupted due to some problem. we must return
+                        failedFOps.add(sourceFile);
+                        copy_successful = false;
+                    }
+
+                }
             }
         }
-        boolean copyRoot(String path,String name,String FILE2,boolean move){
-            boolean b = RootTools.copyFile(RootHelper.getCommandLineString(path), RootHelper.getCommandLineString(FILE2)+"/"+name, true, true);
-            if (!b && path.contains("/0/"))
-                b = RootTools.copyFile(RootHelper.getCommandLineString(path.replace("/0/", "/legacy/")), RootHelper.getCommandLineString(FILE2)+"/"+name, true, true);
-            utils.scanFile(FILE2 + "/" + name, c);
-            return b;
-        }
-
-        private void copyFiles(final BaseFile sourceFile,final HFile targetFile,BufferHandler bufferHandler, GenericCopyThread copyThread, ProgressHandler progressHandler,final int id,final boolean move) throws IOException {
-            Log.e("Copy",sourceFile.getPath());
-            if (sourceFile.isDirectory()) {
-                if(!hash.get(id))return;
-                if (!targetFile.exists()) targetFile.mkdir(c);
-                if(!targetFile.exists()){
-                    Log.e("Copy","cant make dir");
-                    failedFOps.add(sourceFile);
-                    copy_successful=false;
-                    return;
-                }
-                targetFile.setLastModified(sourceFile.lastModified());
-                if(!hash.get(id))return;
-                ArrayList<BaseFile> filePaths = sourceFile.listFiles(false);
-                for (BaseFile file : filePaths) {
-                    HFile destFile = new HFile(targetFile.getMode(),targetFile.getPath(), file.getName(),file.isDirectory());
-                    copyFiles(file, destFile,bufferHandler, copyThread, progressHandler, id, move);
-                }
-                if(!hash.get(id))return;
-            } else {
-                if (!hash.get(id)) return;
-                Log.e("Copy","Copy start for "+targetFile.getName());
-                /**bufferHandler.addFile(sourceFile, targetFile);
-                if(readThread==null){
-                    readThread=new ReadThread(bufferHandler,progressHandler);
-                    readThread.start();
-                }
-                if(writeThread==null){
-                    writeThread=new WriteThread(bufferHandler,progressHandler);
-                    writeThread.start();
-                }**/
-
-                // start a new thread only after previous work is done
-                try {
-                    if (copyThread.thread!=null) copyThread.thread.join();
-                    copyThread.startThread(sourceFile, targetFile, progressHandler);
-                } catch (InterruptedException e) {
-                    // thread interrupted due to some problem. we must return
-                    failedFOps.add(sourceFile);
-                    copy_successful = false;
-                }
-
-            }
-        }
-
-
-    }
     }
 
 
@@ -438,30 +433,9 @@ public class CopyService extends Service {
             }
             return RootHelper.fileExists(hFile2.getPath());
         }
-        else{
-          ArrayList<BaseFile>  baseFiles=RootHelper.getFilesList(hFile1.getParent(),true,true,null);
-            int i=-1;
-            int index=-1;
-            for(BaseFile b:baseFiles){
-                i++;
-                if(b.getPath().equals(hFile1.getPath()))
-                {   index=i;
-                    break;
-                }
-            }
-            ArrayList<BaseFile>  baseFiles1=RootHelper.getFilesList(hFile1.getParent(),true,true,null);
-            int i1=-1;
-            int index1=-1;
-            for(BaseFile b:baseFiles1){
-                i1++;
-                if(b.getPath().equals(hFile1.getPath()))
-                {   index1=i1;
-                    break;
-                }
-            }
-            if(baseFiles.get(index).getSize()==baseFiles1.get(index1).getSize())
-                return true;
-            else return false;
+        else
+        {
+            return (hFile1.length() == hFile2.length());
         }
     }
     private BroadcastReceiver receiver3 = new BroadcastReceiver() {
