@@ -23,18 +23,15 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
-import android.provider.MediaStore;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -43,27 +40,20 @@ import com.amaze.filemanager.R;
 import com.amaze.filemanager.RegisterCallback;
 import com.amaze.filemanager.activities.MainActivity;
 import com.amaze.filemanager.filesystem.BaseFile;
-import com.amaze.filemanager.services.FileVerifier.FileVerifierInterface;
 import com.amaze.filemanager.utils.DataPackage;
 import com.amaze.filemanager.utils.Futils;
 import com.amaze.filemanager.filesystem.HFile;
 import com.amaze.filemanager.filesystem.RootHelper;
 import com.amaze.filemanager.utils.GenericCopyThread;
 import com.stericson.RootTools.RootTools;
+import com.stericson.RootTools.execution.CommandCapture;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.MalformedURLException;
-import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import jcifs.smb.SmbException;
 
 public class CopyService extends Service {
     HashMap<Integer, Boolean> hash = new HashMap<Integer, Boolean>();
@@ -307,20 +297,26 @@ public class CopyService extends Service {
                 String path = bfSource.getPath();
                 String name = bfSource.getName();
 
-                String sSource = '"' + path + '"';                                                  //Atención: es necesario entrecomillar el nombre por si este contiene espacios
                 String sTargetPath = sDestination + "/";
-                String sTarget  = sTargetPath + '"' + name + '"';
+                String sSource = path.replace(" ", "\\ ");
+                String sTarget  = (sTargetPath + name).replace(" ", "\\ ");
+
                 Log.e("Root Copy", path);
 
                 if (bfSource.isDirectory())
                 {
                     try
                     {
-                        String sCat = "su -c cat " + path + " > " + sTargetPath + name;
-                        Runtime.getRuntime().exec(sCat);                                                //"su -c cat filepath1 > filepath2"
+                        String command = "cp -r " + path + " " + sTarget;
+                        CommandCapture cmdCapture = new CommandCapture(0, command);
+
+                        RootTools.remount(sTargetPath,"rw");
+                        RootTools.getShell(true).add(cmdCapture);
+                        RootTools.remount(sTargetPath,"ro");
+
                         return true;
                     }
-                    catch (IOException e)
+                    catch(Exception e1)
                     {
                         return false;
                     }
@@ -437,11 +433,13 @@ public class CopyService extends Service {
             e.printStackTrace();
         }
     }
+
     //check if copy is successful
     boolean checkFiles(HFile hFile1,HFile hFile2){
         if(RootHelper.isDirectory(hFile1.getPath(),rootmode,5))
         {
-            if(RootHelper.fileExists(hFile2.getPath()))return false;
+            if(!RootHelper.fileExists(hFile2.getPath()))
+                return false;
             ArrayList<BaseFile> baseFiles=RootHelper.getFilesList(hFile1.getPath(),true,true,null);
             if(baseFiles.size()>0){
                 boolean b=true;
@@ -454,10 +452,10 @@ public class CopyService extends Service {
             return RootHelper.fileExists(hFile2.getPath());
         }
         else
-        {
             return (hFile1.length() == hFile2.length());
-        }
     }
+
+
     private BroadcastReceiver receiver3 = new BroadcastReceiver() {
 
         @Override
