@@ -439,9 +439,8 @@ public class MainActivity extends BaseActivity implements OnRequestPermissionsRe
         // Primary emulated SD-CARD
         final String rawEmulatedStorageTarget = System.getenv("EMULATED_STORAGE_TARGET");
         //SdCard
-        final String sdcard = "/storage/sdcard1";
-        if (BaseActivity.rootMode)
-            rv.add("/");
+        //final String sdcard = "/storage/sdcard1";
+
         if (TextUtils.isEmpty(rawEmulatedStorageTarget)) {
             // Device has physical external storage; use plain paths.
             if (TextUtils.isEmpty(rawExternalStorage)) {
@@ -484,6 +483,9 @@ public class MainActivity extends BaseActivity implements OnRequestPermissionsRe
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkStoragePermission())
             rv.clear();
+        if(BaseActivity.rootMode) {
+            rv.add("/");
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             String strings[] = FileUtil.getExtSdCardPathsForActivity(this);
             for (String s : strings) {
