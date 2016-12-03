@@ -369,6 +369,16 @@ public class HFile {
         } else
             FileUtil.mkdir(new File(path), context);
     }
+
+    /**
+     * Deletes file or folder
+     * Atention: Do not try to delete using the regular way if the folder is root
+     *
+     * @param context
+     * @param rootmode
+     * @return
+     *      true if ok
+     */
     public boolean delete(Context context,boolean rootmode){
         if (isSmb()) {
             try {
@@ -378,15 +388,16 @@ public class HFile {
             } catch (MalformedURLException e) {
                 Logger.log(e,path,context);
             }
-        } else {
-            boolean b= FileUtil.deleteFile(new File(path), context);
-            if(!b && rootmode){
-                setMode(ROOT_MODE);
-                RootTools.remount(getParent(),"rw");
-                String s=RootHelper.runAndWait("rm -r \""+getPath()+"\"",true);
-                RootTools.remount(getParent(),"ro");
+        }
+        else
+        {
+            if(mode == ROOT_MODE)
+            {
+                if (rootmode)
+                    RootTools.deleteFileOrDirectory(path, true);
             }
-
+            else
+                FileUtil.deleteFile(new File(path), context);
         }
         return !exists();
     }

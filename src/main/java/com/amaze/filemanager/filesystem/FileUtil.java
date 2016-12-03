@@ -37,7 +37,6 @@ import android.util.Log;
 import com.amaze.filemanager.R;
 import com.amaze.filemanager.ui.icons.MimeTypes;
 import com.amaze.filemanager.utils.Futils;
-import com.stericson.RootTools.RootTools;
 
 /**
  * Utility class for helping parsing file systems.
@@ -425,15 +424,17 @@ public abstract class FileUtil {
      * @param folder
      *            the folder
      * @return true if successful.
+     *
+     * En lugar de usar recursividad podemos utilizar
+     *      FileUtils.deleteDirectory(folder);
+     * pero no devuelve resultado true/false
+     * Tambien podemos borrar un directorio directamente con folder.delete() y lo hace en 5.1.1 pero el método indica que debe estar vacío antes!!!
      */
     public static final boolean deleteFilesInFolder(final File folder,Context context) {
         boolean totalSuccess = true;
         if(folder==null)
             return false;
         if (folder.isDirectory()) {
-
-            //RootTools.deleteFileOrDirectory(folder.getPath(), true);
-
             for (File child : folder.listFiles()) {
                 deleteFilesInFolder(child, context);
             }
