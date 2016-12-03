@@ -230,7 +230,8 @@ public class CopyService extends Service {
                             if (hash.get(id)){
                                 if(!f1.isSmb() && !new File(files.get(i).getPath()).canRead() && rootmode)  //Aquí entramos si el origen está en una carpeta que necesita root
                                 {
-                                    copyRoot(files.get(i).getPath(), files.get(i).getName(), FILE2, false);
+                                    //copyRoot(files.get(i).getPath(), files.get(i).getName(), FILE2, false);
+                                    copyRoot(f1, FILE2, false);
                                     bufferHandler.writing = false;                                  //Indica que hemos terminado la copia de ese archivo -no es un thread-
                                     continue;
                                 }
@@ -277,7 +278,7 @@ public class CopyService extends Service {
                     for (int i = 0; i < files.size(); i++) {
                         String path=files.get(i).getPath();
                         String name=files.get(i).getName();
-                        copyRoot(path,name, FILE2, true);
+                        copyRoot(files.get(i), FILE2, true);
                         if(!checkFiles(new HFile(files.get(i).getMode(),path),new HFile(HFile.ROOT_MODE,FILE2+"/"+name))){
                             failedFOps.add(files.get(i));
                         }
@@ -300,14 +301,32 @@ public class CopyService extends Service {
 
 
 
-            boolean copyRoot(String path,String name,String FILE2, boolean bRw)
+            //boolean copyRoot(String path,String name,String FILE2, boolean bRw)
+            boolean copyRoot(BaseFile bfSource, String sDestination, boolean bRw)
             {
+                String path = bfSource.getPath();
+                String name = bfSource.getName();
+
                 String sSource = '"' + path + '"';                                                  //Atención: es necesario entrecomillar el nombre por si este contiene espacios
-                String sTargetPath = FILE2 + "/";
+                String sTargetPath = sDestination + "/";
                 String sTarget  = sTargetPath + '"' + name + '"';
                 Log.e("Root Copy", path);
 
-                return RootTools.copyFile(sSource, sTarget, bRw, true);                             //Indicamos que deberá hacer un remount RW
+                if (bfSource.isDirectory())
+                {
+                    try
+                    {
+                        String sCat = "su -c cat " + path + " > " + sTargetPath + name;
+                        Runtime.getRuntime().exec(sCat);                                                //"su -c cat filepath1 > filepath2"
+                        return true;
+                    }
+                    catch (IOException e)
+                    {
+                        return false;
+                    }
+                }
+                else
+                    return RootTools.copyFile(sSource, sTarget, bRw, true);                             //Indicamos que deberá hacer un remount RW
             }
 
             private void copyFiles(final BaseFile sourceFile,final HFile targetFile,BufferHandler bufferHandler, GenericCopyThread copyThread, ProgressHandler progressHandler,final int id) throws IOException {

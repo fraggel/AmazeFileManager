@@ -394,7 +394,7 @@ public class HFile {
             if(mode == ROOT_MODE)
             {
                 if (rootmode)
-                    RootTools.deleteFileOrDirectory(path, true);
+                    RootTools.deleteFileOrDirectory(path.replace(" ", "\\ "), true);                //OJO: Es necesario si el nombre contiene espacios en blanco. Probado a poner entrecomillado pero NO FUNCIONA: '"' + path + '"';
             }
             else
                 FileUtil.deleteFile(new File(path), context);
