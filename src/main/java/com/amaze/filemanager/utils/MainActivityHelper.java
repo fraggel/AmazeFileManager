@@ -524,7 +524,7 @@ public class MainActivityHelper {
                 newName.contains(GREATER_THAN) || newName.contains(LESS_THAN) ||
                 newName.contains(QUESTION_MARK) || newName.contains(QUOTE)) {
             return false;
-        } else if (isDir) {
+        } /**else if (isDir) {
 
             // new directory name shall not be equal to parent directory name
             StringBuilder parentPath = new StringBuilder(builder.substring(0,
@@ -532,7 +532,7 @@ public class MainActivityHelper {
             String parentName = parentPath.substring(parentPath.lastIndexOf("/")+1,
                     parentPath.length());
             if (newName.equals(parentName)) return false;
-        }
+        }**/
         return true;
     }
 }

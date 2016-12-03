@@ -37,6 +37,7 @@ import android.util.Log;
 import com.amaze.filemanager.R;
 import com.amaze.filemanager.ui.icons.MimeTypes;
 import com.amaze.filemanager.utils.Futils;
+import com.stericson.RootTools.RootTools;
 
 /**
  * Utility class for helping parsing file systems.
@@ -430,6 +431,9 @@ public abstract class FileUtil {
         if(folder==null)
             return false;
         if (folder.isDirectory()) {
+
+            //RootTools.deleteFileOrDirectory(folder.getPath(), true);
+
             for (File child : folder.listFiles()) {
                 deleteFilesInFolder(child, context);
             }

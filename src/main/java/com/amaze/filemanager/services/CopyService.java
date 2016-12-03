@@ -305,12 +305,13 @@ public class CopyService extends Service {
                 String sSource = '"' + path + '"';                                                  //Atención: es necesario entrecomillar el nombre por si este contiene espacios
                 String sTargetPath = FILE2 + "/";
                 String sTarget  = sTargetPath + '"' + name + '"';
+                Log.e("Root Copy", path);
 
                 return RootTools.copyFile(sSource, sTarget, bRw, true);                             //Indicamos que deberá hacer un remount RW
             }
 
             private void copyFiles(final BaseFile sourceFile,final HFile targetFile,BufferHandler bufferHandler, GenericCopyThread copyThread, ProgressHandler progressHandler,final int id) throws IOException {
-                Log.e("Copy",sourceFile.getPath());
+                Log.e("Generic Copy",sourceFile.getPath());
                 if (sourceFile.isDirectory()) {
                     if(!hash.get(id))return;
                     if (!targetFile.exists()) targetFile.mkdir(c);
