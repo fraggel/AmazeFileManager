@@ -294,10 +294,17 @@ public class CopyService extends Service {
             }
 
 
-
+            /**
+             * Copy from/to a folder with root permissions.
+             * Copy is procedure and maintaining the permissions!!!
+             * @param bfSource
+             * @param sDestination
+             * @param bRw
+             * @return
+             */
             boolean copyRoot(BaseFile bfSource, String sDestination, boolean bRw)
             {
-                String path = bfSource.getPath().replace(" ", "\\ ");
+                String path = bfSource.getPath().replace(" ", "\\ ");                               //Escape sequence for blank spaces
                 String name = bfSource.getName().replace(" ", "\\ ");
 
                 String sTargetPath = sDestination.replace(" ", "\\ ") + "/";
@@ -310,7 +317,7 @@ public class CopyService extends Service {
                 {
                     try
                     {
-                        String command = "cp -r " + sSource + " " + sTarget;
+                        String command = "cp -rp " + sSource + " " + sTarget;                       //Recursive copy maintaining permissions
                         CommandCapture cmdCapture = new CommandCapture(0, command);
 
                         if(bRw)
@@ -327,7 +334,7 @@ public class CopyService extends Service {
                     }
                 }
                 else
-                    return RootTools.copyFile(sSource, sTarget, bRw, true);                             //Indicamos que deberá hacer un remount RW
+                    return RootTools.copyFile(sSource, sTarget, bRw, true);                         //Indicamos que deberá hacer un remount RW
             }
 
             private void copyFiles(final BaseFile sourceFile,final HFile targetFile,BufferHandler bufferHandler, GenericCopyThread copyThread, ProgressHandler progressHandler,final int id) throws IOException {
