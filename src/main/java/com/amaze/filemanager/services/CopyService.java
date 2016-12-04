@@ -162,7 +162,6 @@ public class CopyService extends Service {
         }
 
         class Copy {
-
             long totalBytes = 0L;
             boolean calculatingTotalSize=false;
             ArrayList<HFile> failedFOps;
@@ -199,9 +198,23 @@ public class CopyService extends Service {
 
                 return totalBytes;
             }
+
+            /**
+             * copy/move procedures
+             * If any or both, target or source, are not writable, it will use root tools to perform the action
+             * @param id
+             * @param files
+             * @param FILE2
+             * @param move
+             * @param mode
+             */
             public void execute(final int id, final ArrayList<BaseFile> files, final String FILE2, final boolean move,int mode)
             {
-                if (utils.checkFolder((FILE2), c) == 1) {
+                boolean bSourceWritable = isSourceWritable(files);
+                boolean bTargetWritable = (utils.checkFolder((FILE2), c) == 1);
+
+                if (bTargetWritable && bSourceWritable)                                             //Check if both, source and target are writable
+                {
                     final ProgressHandler progressHandler=new ProgressHandler(-1);
                     BufferHandler bufferHandler=new BufferHandler(c);
                     GenericCopyThread copyThread = new GenericCopyThread(c);
@@ -218,12 +231,6 @@ public class CopyService extends Service {
                         Log.e("Copy","basefile\t"+f1.getPath());
                         try {
                             if (hash.get(id)){
-                                if(!f1.isSmb() && !new File(files.get(i).getPath()).canRead() && rootmode)  //Aquí entramos si el origen está en una carpeta que necesita root
-                                {
-                                    copyRoot(f1, FILE2, false);
-                                    bufferHandler.writing = false;                                  //Indica que hemos terminado la copia de ese archivo -no es un thread-
-                                    continue;
-                                }
                                 HFile hFile=new HFile(mode,FILE2, files.get(i).getName(),f1.isDirectory());
                                 copyFiles((f1),hFile, bufferHandler, copyThread, progressHandler, id);
                             }
@@ -267,7 +274,7 @@ public class CopyService extends Service {
                     for (int i = 0; i < files.size(); i++) {
                         String path=files.get(i).getPath();
                         String name=files.get(i).getName();
-                        copyRoot(files.get(i), FILE2, true);
+                        copyRoot(files.get(i), FILE2, !bTargetWritable);                            //Remount target only if its not writable
                         if(!checkFiles(new HFile(files.get(i).getMode(),path),new HFile(HFile.ROOT_MODE,FILE2+"/"+name))){
                             failedFOps.add(files.get(i));
                         }
@@ -280,8 +287,6 @@ public class CopyService extends Service {
                         }
                         new DeleteTask(getContentResolver(), c).execute((toDelete));
                     }
-
-
                 } else {
                     for(BaseFile f:files)
                         failedFOps.add(f);
@@ -363,6 +368,32 @@ public class CopyService extends Service {
                         copy_successful = false;
                     }
                 }
+            }
+
+            /**
+             * Check if source folder is writable or not
+             * @param files: ArrayList of BaseFile
+             * @return
+             */
+            private boolean isSourceWritable (final ArrayList<BaseFile> files)
+            {
+                boolean bSourceWritable = true;                                                     //Assume is writable
+                if(files.size() > 0)                                                                //Check if the list is not empty
+                {
+                    BaseFile bfSource = files.get(0);                                               //We only need to check the first
+                    String sSourceFolder = bfSource.getPath().replace(" ", "\\ ");                  //Name could have blank spaces
+
+                    if(!bfSource.isDirectory())                                                     //If it's not a directory, remove the name to get the folder name
+                    {
+                        String sSourceName = bfSource.getName().replace(" ", "\\ ");
+                        sSourceFolder = sSourceFolder.replace(sSourceName, "");
+                    }
+
+                    if(utils.checkFolder(sSourceFolder, c) != 1)
+                        bSourceWritable = false;
+                }
+
+                return bSourceWritable;
             }
         }
     }
