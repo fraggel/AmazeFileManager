@@ -308,9 +308,11 @@ public class CopyService extends Service {
                         String command = "cp -r " + sSource + " " + sTarget;
                         CommandCapture cmdCapture = new CommandCapture(0, command);
 
-                        RootTools.remount(sTargetPath,"rw");
+                        if(bRw)
+                            RootTools.remount(sTargetPath,"rw");
                         RootTools.getShell(true).add(cmdCapture);
-                        RootTools.remount(sTargetPath,"ro");                                        //ToDo: only if its not root
+                        if(bRw)
+                            RootTools.remount(sTargetPath,"ro");                                    //only if its not root
 
                         return true;
                     }
