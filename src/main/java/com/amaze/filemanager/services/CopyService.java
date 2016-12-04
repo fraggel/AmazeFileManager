@@ -220,7 +220,6 @@ public class CopyService extends Service {
                             if (hash.get(id)){
                                 if(!f1.isSmb() && !new File(files.get(i).getPath()).canRead() && rootmode)  //Aquí entramos si el origen está en una carpeta que necesita root
                                 {
-                                    //copyRoot(files.get(i).getPath(), files.get(i).getName(), FILE2, false);
                                     copyRoot(f1, FILE2, false);
                                     bufferHandler.writing = false;                                  //Indica que hemos terminado la copia de ese archivo -no es un thread-
                                     continue;
@@ -291,15 +290,14 @@ public class CopyService extends Service {
 
 
 
-            //boolean copyRoot(String path,String name,String FILE2, boolean bRw)
             boolean copyRoot(BaseFile bfSource, String sDestination, boolean bRw)
             {
-                String path = bfSource.getPath();
-                String name = bfSource.getName();
+                String path = bfSource.getPath().replace(" ", "\\ ");
+                String name = bfSource.getName().replace(" ", "\\ ");
 
-                String sTargetPath = sDestination + "/";
-                String sSource = path.replace(" ", "\\ ");
-                String sTarget  = (sTargetPath + name).replace(" ", "\\ ");
+                String sTargetPath = sDestination.replace(" ", "\\ ") + "/";
+                String sSource = path;
+                String sTarget  = sTargetPath + name;
 
                 Log.e("Root Copy", path);
 
@@ -307,12 +305,12 @@ public class CopyService extends Service {
                 {
                     try
                     {
-                        String command = "cp -r " + path + " " + sTarget;
+                        String command = "cp -r " + sSource + " " + sTarget;
                         CommandCapture cmdCapture = new CommandCapture(0, command);
 
                         RootTools.remount(sTargetPath,"rw");
                         RootTools.getShell(true).add(cmdCapture);
-                        RootTools.remount(sTargetPath,"ro");
+                        RootTools.remount(sTargetPath,"ro");                                        //ToDo: only if its not root
 
                         return true;
                     }
