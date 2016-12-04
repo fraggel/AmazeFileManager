@@ -327,7 +327,8 @@ public class CopyService extends Service {
                 Log.e("Generic Copy",sourceFile.getPath());
                 if (sourceFile.isDirectory()) {
                     if(!hash.get(id))return;
-                    if (!targetFile.exists()) targetFile.mkdir(c);
+                    if (!targetFile.exists())
+                        targetFile.mkdir(c);
                     if(!targetFile.exists()){
                         Log.e("Copy","cant make dir");
                         failedFOps.add(sourceFile);
@@ -335,13 +336,17 @@ public class CopyService extends Service {
                         return;
                     }
                     targetFile.setLastModified(sourceFile.lastModified());
-                    if(!hash.get(id))return;
+                    if(!hash.get(id)) return;
+
                     ArrayList<BaseFile> filePaths = sourceFile.listFiles(false);
+                    if (filePaths.size() == 0)
+                        bufferHandler.writing = false;                                              //Si no hay archivos para copiar, indicamos que no escribimos
+
                     for (BaseFile file : filePaths) {
                         HFile destFile = new HFile(targetFile.getMode(),targetFile.getPath(), file.getName(),file.isDirectory());
                         copyFiles(file, destFile,bufferHandler, copyThread, progressHandler, id);
                     }
-                    if(!hash.get(id))return;
+                    if(!hash.get(id)) return;
                 } else {
                     if (!hash.get(id)) return;
                     Log.e("Copy","Copy start for "+targetFile.getName());
@@ -355,7 +360,6 @@ public class CopyService extends Service {
                         failedFOps.add(sourceFile);
                         copy_successful = false;
                     }
-
                 }
             }
         }
