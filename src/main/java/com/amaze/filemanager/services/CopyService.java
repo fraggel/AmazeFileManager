@@ -48,8 +48,12 @@ import com.amaze.filemanager.utils.GenericCopyThread;
 import com.stericson.RootTools.RootTools;
 import com.stericson.RootTools.execution.CommandCapture;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -322,7 +326,9 @@ public class CopyService extends Service {
 
                         if(bRw)
                             RootTools.remount(sTargetPath,"rw");
+
                         RootTools.getShell(true).add(cmdCapture);
+
                         if(bRw)
                             RootTools.remount(sTargetPath,"ro");                                    //only if its not root
 
@@ -402,6 +408,9 @@ public class CopyService extends Service {
 
                 return bSourceWritable;
             }
+
+
+
         }
     }
 
@@ -484,12 +493,12 @@ public class CopyService extends Service {
                 return false;
             ArrayList<BaseFile> baseFiles=RootHelper.getFilesList(hFile1.getPath(),true,true,null);
             if(baseFiles.size()>0){
-                boolean b=true;
+                                                                                                    //boolean b=true;
                 for(BaseFile baseFile:baseFiles){
                   if(!checkFiles(new HFile(baseFile.getMode(),baseFile.getPath()),new HFile(hFile2.getMode(),hFile2.getPath()+"/"+(baseFile.getName()))))
-                      b=false;
+                      return false;                                                                 //b=false;
                 }
-                return b;
+                return true;                                                                         //return b;
             }
             return RootHelper.fileExists(hFile2.getPath());
         }
