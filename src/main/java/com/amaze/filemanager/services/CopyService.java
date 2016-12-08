@@ -46,6 +46,7 @@ import com.amaze.filemanager.filesystem.HFile;
 import com.amaze.filemanager.filesystem.RootHelper;
 import com.amaze.filemanager.utils.GenericCopyThread;
 import com.stericson.RootTools.RootTools;
+import com.stericson.RootTools.execution.Command;
 import com.stericson.RootTools.execution.CommandCapture;
 
 import java.io.BufferedReader;
@@ -289,7 +290,7 @@ public class CopyService extends Service {
                             if(!failedFOps.contains(a))
                                 toDelete.add(a);
                         }
-                        new DeleteTask(getContentResolver(), c).execute((toDelete));
+                        new DeleteTask(getContentResolver(), c).execute((toDelete));                //ToDo: show progress/message
                     }
                 } else {
                     for(BaseFile f:files)
@@ -300,7 +301,16 @@ public class CopyService extends Service {
 
             /**
              * Copy from/to a folder with root permissions.
-             * Copy is procedure and maintaining the permissions!!!
+             * Copy is recursive and maintaining the permissions!!!
+             * Caveat: Do not use
+             *          CommandCapture cmdCapture = new CommandCapture(0, command);
+             *          RootTools.getShell(true).add(cmdCapture);
+             *          while (!cmdCapture.isFinished()){}
+             *
+             * Different approaches:
+             *      -a: tries to preserve file structure but skips symlinks files in recursive folders
+             *      -rp: same as above but copies symlinks as a regular file
+             *      -drp: same as above but preserving links. Does not work on directories          //Caveat: -r could fail in /dev/console. Use -R instead
              * @param bfSource
              * @param sDestination
              * @param bRw
@@ -321,13 +331,11 @@ public class CopyService extends Service {
                 {
                     try
                     {
-                        String command = "cp -rp " + sSource + " " + sTarget;                       //Recursive copy maintaining permissions
-                        CommandCapture cmdCapture = new CommandCapture(0, command);
-
                         if(bRw)
                             RootTools.remount(sTargetPath,"rw");
 
-                        RootTools.getShell(true).add(cmdCapture);
+                        String command = "cp -a " + sSource + " " + sTarget;                       //Recursive copy maintaining permissions
+                        String sResult = shellExec(command, true);
 
                         if(bRw)
                             RootTools.remount(sTargetPath,"ro");                                    //only if its not root
@@ -409,8 +417,46 @@ public class CopyService extends Service {
                 return bSourceWritable;
             }
 
+            /**
+             * Executes commands from terminal and waits for response
+             * @param sCommand: command to execute
+             * @param bSU: true if required su -only on rooted devives-
+             * @return string with the output
+             */
+            public String shellExec(String sCommand, boolean bSU)
+            {
+                StringBuffer sOutput = new StringBuffer();
+                Process pProcess;
 
+                try
+                {
+                    if(bSU)                                                                         //if su is required, the command must be executed within the same process!!!
+                    {
+                        pProcess = Runtime.getRuntime().exec("su");
+                        DataOutputStream dos = new DataOutputStream(pProcess.getOutputStream());
+                        dos.writeBytes(sCommand + "\n");
+                        dos.writeBytes("exit\n");
+                        dos.flush();
+                        dos.close();
+                    }
+                    else
+                        pProcess = Runtime.getRuntime().exec(sCommand);
 
+                    pProcess.waitFor();                                                             //Waiting the process to end
+
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(pProcess.getInputStream()));
+                    String line = "";
+                    while ((line = reader.readLine()) != null)
+                        sOutput.append(line + "\\n");
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+
+                String response = sOutput.toString();
+                return response;
+            }
         }
     }
 
@@ -485,7 +531,15 @@ public class CopyService extends Service {
         }
     }
 
-    //check if copy is successful
+    /**
+     * Check if copy is successful
+     * Recursive checking across the directories
+     * In case of symlink file, does not check the file and returns true
+     * ToDo: show progress/message
+     * @param hFile1: source
+     * @param hFile2: target
+     * @return true if ok
+     */
     boolean checkFiles(HFile hFile1,HFile hFile2){
         if(RootHelper.isDirectory(hFile1.getPath(),rootmode,5))
         {
@@ -498,12 +552,23 @@ public class CopyService extends Service {
                   if(!checkFiles(new HFile(baseFile.getMode(),baseFile.getPath()),new HFile(hFile2.getMode(),hFile2.getPath()+"/"+(baseFile.getName()))))
                       return false;                                                                 //b=false;
                 }
-                return true;                                                                         //return b;
+                return true;                                                                        //return b;
             }
             return RootHelper.fileExists(hFile2.getPath());
         }
         else
-            return (hFile1.length() == hFile2.length());
+        {
+            long lFile1 = hFile1.length();
+            if(lFile1 == -1)                                                               //Its a symlink so it does not have any length
+                return true;                                                                        //Do not check length of destination or even if it exists
+
+            long lFile2 = hFile2.length();
+
+            if(lFile1 == lFile2)
+                return true;
+            else
+                return false;
+        }
     }
 
 
