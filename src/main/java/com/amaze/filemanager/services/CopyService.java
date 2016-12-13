@@ -275,16 +275,18 @@ public class CopyService extends Service {
                 }
                 else if (rootmode)                                                                  //Cuando el destino es una carpeta que necesita root
                 {
-                    boolean m = true;
+                    boolean bCopyOk = true;
                     for (int i = 0; i < files.size(); i++) {
                         String path=files.get(i).getPath();
                         String name=files.get(i).getName();
                         copyRoot(files.get(i), FILE2, !bTargetWritable);                            //Remount target only if its not writable
                         if(!checkFiles(new HFile(files.get(i).getMode(),path),new HFile(HFile.ROOT_MODE,FILE2+"/"+name))){
                             failedFOps.add(files.get(i));
+                            bCopyOk = false;
                         }
                     }
-                    if (move && m) {
+
+                    if (move && bCopyOk) {                                                          //Only delete if copy is ok
                         ArrayList<BaseFile> toDelete=new ArrayList<>();
                         for(BaseFile a:files){
                             if(!failedFOps.contains(a))
@@ -559,15 +561,11 @@ public class CopyService extends Service {
         else
         {
             long lFile1 = hFile1.length();
-            if(lFile1 == -1)                                                               //Its a symlink so it does not have any length
+            if(lFile1 == -1)                                                                        //Its a symlink so it does not have any length
                 return true;                                                                        //Do not check length of destination or even if it exists
 
             long lFile2 = hFile2.length();
-
-            if(lFile1 == lFile2)
-                return true;
-            else
-                return false;
+            return (lFile1 == lFile2);
         }
     }
 

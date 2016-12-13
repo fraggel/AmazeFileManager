@@ -35,7 +35,7 @@ import java.util.ArrayList;
 public class MoveFiles extends AsyncTask<String,Void,Boolean> {
     ArrayList<BaseFile> files;
     Main ma;
-    String path;
+    String targetPath;
     Context context;
     int mode;
     public MoveFiles(ArrayList<BaseFile> files, Main ma, Context context,int mode){
@@ -47,35 +47,44 @@ public class MoveFiles extends AsyncTask<String,Void,Boolean> {
 
     @Override
     protected Boolean doInBackground(String... strings) {
-        path=strings[0];
-        boolean b=true;
-        int i=0;
-        if(files.size()==0)return true;
-        if(mode!=0)return false;
-        if(files.get(0).isSmb()){return false;}
-        for(BaseFile f:files){
-            File file=new File(path+"/"+f.getName());
+        targetPath = strings[0];                                                                          //target path
+        boolean b = true;
+        int i = 0;
+
+        if(files.size()==0)
+            return true;
+        if(mode!=0)
+            return false;
+        if(files.get(0).isSmb())
+            return false;
+
+        //This only works when in the same memory -internal or external-
+        for(BaseFile f:files)
+        {
+            File file=new File(targetPath+"/"+f.getName());
             File file1=new File(f.getPath());
-            if(!file1.renameTo(file)){b=false;}
+            if(!file1.renameTo(file))
+                b=false;
             i++;
         }
         return b;
     }
+
     @Override
     public void onPostExecute(Boolean b){
         Futils futils=new Futils();
         if(b ){
-            if(ma!=null)if(ma.CURRENT_PATH.equals(path))ma.updateList();
+            if(ma!=null)if(ma.CURRENT_PATH.equals(targetPath))ma.updateList();
                 for(BaseFile f:files) {
                     futils.scanFile(f.getPath(), context);
-                    futils.scanFile(path + "/" + f.getName(), context);
+                    futils.scanFile(targetPath + "/" + f.getName(), context);
 
                 }
         }
         else if(!b){
             Intent intent = new Intent(context, CopyService.class);
             intent.putExtra("FILE_PATHS", (files));
-            intent.putExtra("COPY_DIRECTORY", path);
+            intent.putExtra("COPY_DIRECTORY", targetPath);
             intent.putExtra("move",true);
             intent.putExtra("MODE",mode);
             context.startService(intent);}
