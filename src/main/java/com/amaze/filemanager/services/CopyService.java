@@ -217,6 +217,7 @@ public class CopyService extends Service {
             {
                 boolean bSourceWritable = isSourceWritable(files);
                 boolean bTargetWritable = (utils.checkFolder((FILE2), c) == 1);
+                boolean bCopyOk  = true;
 
                 if (bTargetWritable && bSourceWritable)                                             //Check if both, source and target are writable
                 {
@@ -272,10 +273,12 @@ public class CopyService extends Service {
                         e.printStackTrace();
                         // thread interrupted for some reason, probably already been handled
                     }
+
+                    //Check files before delete it in case of move
+                    //bCopyOk = checkFilesCopied();                                                 //ToDo: Check if files were copied successfully
                 }
                 else if (rootmode)                                                                  //Cuando el destino es una carpeta que necesita root
                 {
-                    boolean bCopyOk = true;
                     for (int i = 0; i < files.size(); i++) {
                         String path=files.get(i).getPath();
                         String name=files.get(i).getName();
@@ -285,19 +288,25 @@ public class CopyService extends Service {
                             bCopyOk = false;
                         }
                     }
-
-                    if (move && bCopyOk) {                                                          //Only delete if copy is ok
-                        ArrayList<BaseFile> toDelete=new ArrayList<>();
-                        for(BaseFile a:files){
-                            if(!failedFOps.contains(a))
-                                toDelete.add(a);
-                        }
-                        new DeleteTask(getContentResolver(), c).execute((toDelete));                //ToDo: show progress/message
-                    }
-                } else {
+                }
+                else
+                {
                     for(BaseFile f:files)
                         failedFOps.add(f);
+                    bCopyOk = false;
                 }
+
+                //Delete files from source if move is selected
+                if (move && bCopyOk)                                                                //Only delete if copy is ok
+                {
+                    ArrayList<BaseFile> toDelete=new ArrayList<>();
+                    for(BaseFile a:files){
+                        if(!failedFOps.contains(a))
+                            toDelete.add(a);
+                    }
+                    new DeleteTask(getContentResolver(), c).execute((toDelete));                    //ToDo: show progress/message
+                }
+
             }
 
 
