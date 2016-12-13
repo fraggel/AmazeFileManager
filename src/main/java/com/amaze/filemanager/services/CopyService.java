@@ -46,15 +46,12 @@ import com.amaze.filemanager.filesystem.HFile;
 import com.amaze.filemanager.filesystem.RootHelper;
 import com.amaze.filemanager.utils.GenericCopyThread;
 import com.stericson.RootTools.RootTools;
-import com.stericson.RootTools.execution.Command;
-import com.stericson.RootTools.execution.CommandCapture;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -283,10 +280,6 @@ public class CopyService extends Service {
                         String path=files.get(i).getPath();
                         String name=files.get(i).getName();
                         copyRoot(files.get(i), FILE2, !bTargetWritable);                            //Remount target only if its not writable
-                        if(!checkFiles(new HFile(files.get(i).getMode(),path),new HFile(HFile.ROOT_MODE,FILE2+"/"+name))){
-                            failedFOps.add(files.get(i));
-                            bCopyOk = false;
-                        }
                     }
                 }
                 else
@@ -296,17 +289,35 @@ public class CopyService extends Service {
                     bCopyOk = false;
                 }
 
-                //Delete files from source if move is selected
-                if (move && bCopyOk)                                                                //Only delete if copy is ok
-                {
-                    ArrayList<BaseFile> toDelete=new ArrayList<>();
-                    for(BaseFile a:files){
-                        if(!failedFOps.contains(a))
-                            toDelete.add(a);
-                    }
-                    new DeleteTask(getContentResolver(), c).execute((toDelete));                    //ToDo: show progress/message
-                }
 
+                if(bCopyOk)
+                {
+                    //Check if copy was performed ok
+                    for (int i = 0; i < files.size(); i++)
+                    {
+                        String path = files.get(i).getPath();
+                        String name = files.get(i).getName();
+                        if (!checkFiles(new HFile(files.get(i).getMode(), path), new HFile(HFile.ROOT_MODE, FILE2 + "/" + name)))
+                        {
+                            failedFOps.add(files.get(i));
+                            bCopyOk = false;
+                            break;
+                        }
+                    }
+
+
+                    //Delete files from source if move is selected and copy was performed ok
+                    if (move && bCopyOk)
+                    {
+                        ArrayList<BaseFile> toDelete = new ArrayList<>();
+                        for (BaseFile a : files)
+                        {
+                            if (!failedFOps.contains(a))
+                                toDelete.add(a);
+                        }
+                        new DeleteTask(getContentResolver(), c).execute((toDelete));                    //ToDo: show progress/message
+                    }
+                }
             }
 
 
@@ -345,7 +356,7 @@ public class CopyService extends Service {
                         if(bRw)
                             RootTools.remount(sTargetPath,"rw");
 
-                        String command = "cp -a " + sSource + " " + sTarget;                       //Recursive copy maintaining permissions
+                        String command = "cp -a " + sSource + " " + sTarget;                        //Recursive copy maintaining permissions
                         String sResult = shellExec(command, true);
 
                         if(bRw)
@@ -385,9 +396,11 @@ public class CopyService extends Service {
                         HFile destFile = new HFile(targetFile.getMode(),targetFile.getPath(), file.getName(),file.isDirectory());
                         copyFiles(file, destFile,bufferHandler, copyThread, progressHandler, id);
                     }
-                    if(!hash.get(id)) return;
+                    if(!hash.get(id))
+                        return;
                 } else {
-                    if (!hash.get(id)) return;
+                    if (!hash.get(id))
+                        return;
                     Log.e("Copy","Copy start for "+targetFile.getName());
 
                     // start a new thread only after previous work is done

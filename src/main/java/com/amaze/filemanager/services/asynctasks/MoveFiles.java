@@ -49,7 +49,6 @@ public class MoveFiles extends AsyncTask<String,Void,Boolean> {
     protected Boolean doInBackground(String... strings) {
         targetPath = strings[0];                                                                          //target path
         boolean b = true;
-        int i = 0;
 
         if(files.size()==0)
             return true;
@@ -65,7 +64,6 @@ public class MoveFiles extends AsyncTask<String,Void,Boolean> {
             File file1=new File(f.getPath());
             if(!file1.renameTo(file))
                 b=false;
-            i++;
         }
         return b;
     }
