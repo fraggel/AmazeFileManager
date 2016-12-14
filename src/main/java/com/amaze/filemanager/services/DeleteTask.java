@@ -19,6 +19,8 @@
 
 package com.amaze.filemanager.services;
 
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -27,9 +29,11 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
+import android.support.v4.app.NotificationCompat;
 import android.widget.Toast;
 
 import com.amaze.filemanager.R;
+import com.amaze.filemanager.activities.MainActivity;
 import com.amaze.filemanager.fragments.ZipViewer;
 import com.amaze.filemanager.filesystem.BaseFile;
 import com.amaze.filemanager.filesystem.FileUtil;
@@ -43,6 +47,9 @@ import java.util.ArrayList;
 
 public class DeleteTask extends AsyncTask<ArrayList<BaseFile>, String, Boolean> {
 
+    NotificationManager mNotifyManager;
+    NotificationCompat.Builder mBuilder;
+    int idNotifier = 666;
 
     ArrayList<BaseFile> files;
     ContentResolver contentResolver;
@@ -53,6 +60,23 @@ public class DeleteTask extends AsyncTask<ArrayList<BaseFile>, String, Boolean> 
 
     public DeleteTask(ContentResolver c, Context cd) {
         this.cd = cd;
+
+        mNotifyManager = (NotificationManager) this.cd.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        Intent notificationIntent = new Intent(this.cd, MainActivity.class);
+        notificationIntent.setAction(Intent.ACTION_MAIN);
+        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        notificationIntent.putExtra("openprocesses",true);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this.cd, 0, notificationIntent, 0);
+
+        mBuilder = new NotificationCompat.Builder(this.cd);
+        mBuilder.setContentIntent(pendingIntent);
+        mBuilder.setSmallIcon(R.drawable.ic_content_copy_white_36dp);
+        mBuilder.setContentTitle(utils.getString(cd, R.string.deleting));
+        mBuilder.setContentText(utils.getString(cd, R.string.deleting));
+
+        mNotifyManager.notify(idNotifier, mBuilder.build());
+
         rootMode = PreferenceManager.getDefaultSharedPreferences(cd).getBoolean("rootmode", false);
     }
 
@@ -71,9 +95,11 @@ public class DeleteTask extends AsyncTask<ArrayList<BaseFile>, String, Boolean> 
     protected Boolean doInBackground(ArrayList<BaseFile>... p1) {
         files = p1[0];
         boolean b = true;
-        if(files.size()==0)return true;
-           for(BaseFile a:files)
-                    (a).delete(cd,rootMode);
+        if(files.size()==0)
+            return true;
+
+       for(BaseFile a:files)
+           a.delete(cd,rootMode);
 
         return b;
     }
@@ -93,16 +119,22 @@ public class DeleteTask extends AsyncTask<ArrayList<BaseFile>, String, Boolean> 
                     utils.scanFile(f.getPath(), cd);
                 }
             }
-        }if (!b) {
-            Toast.makeText(cd, utils.getString(cd, R.string.error), Toast.LENGTH_SHORT).show();
-        } else if (zipViewer==null) {
-            Toast.makeText(cd, utils.getString(cd, R.string.done), Toast.LENGTH_SHORT).show();
         }
+
+        if (!b)
+        {
+            mBuilder.setContentText(utils.getString(cd, R.string.error));
+            mNotifyManager.notify(idNotifier, mBuilder.build());                                    //Toast.makeText(cd, utils.getString(cd, R.string.error), Toast.LENGTH_SHORT).show();
+        } else if (zipViewer==null) {
+            mNotifyManager.cancel(idNotifier);                                                      //Toast.makeText(cd, utils.getString(cd, R.string.done), Toast.LENGTH_SHORT).show();
+        }
+
         if (zipViewer!=null) {
             zipViewer.files.clear();
         }
     }
-     void delete(final Context context, final String file) {
+
+    void delete(final Context context, final String file) {
         final String where = MediaStore.MediaColumns.DATA + "=?";
         final String[] selectionArgs = new String[] {
                 file

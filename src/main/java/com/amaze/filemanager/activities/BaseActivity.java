@@ -82,11 +82,10 @@ public class BaseActivity extends AppCompatActivity {
     public boolean checkStoragePermission() {
 
         // Verify that all required contact permissions have been granted.
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
             return true;
-        }
-        return false;
+        else
+            return false;
     }
 
     void requestStoragePermission() {
