@@ -280,23 +280,19 @@ public class CopyService extends Service {
                         e.printStackTrace();
                         // thread interrupted for some reason, probably already been handled
                     }
-
-                    //Check files before delete it in case of move
-                    //bCopyOk = checkFilesCopied();                                                 //ToDo: Check if files were copied successfully
                 }
                 else if (rootmode)                                                                  //Cuando el destino es una carpeta que necesita root
                 {
                     String totalBytes =  utils.readableFileSize(getTotalBytes(files, null));
 
                     int id1 = Integer.parseInt("456" + id);
+                    if(move)
+                        mBuilder.setContentTitle(getResources().getString(R.string.moving));
                     mBuilder.setContentText(totalBytes);
-                    mNotifyManager.notify(id1, mBuilder.build());                                   //Toast.makeText(cd, utils.getString(cd, R.string.error), Toast.LENGTH_SHORT).show();
+                    mNotifyManager.notify(id1, mBuilder.build());
 
-                    for (int i = 0; i < files.size(); i++) {
-                        String path=files.get(i).getPath();
-                        String name=files.get(i).getName();
+                    for (int i = 0; i < files.size(); i++)
                         copyRoot(files.get(i), FILE2, !bTargetWritable);                            //Remount target only if its not writable
-                    }
                 }
                 else
                 {
@@ -331,7 +327,7 @@ public class CopyService extends Service {
                             if (!failedFOps.contains(a))
                                 toDelete.add(a);
                         }
-                        new DeleteTask(getContentResolver(), c).execute((toDelete));                    //ToDo: show progress/message
+                        new DeleteTask(getContentResolver(), c).execute((toDelete));
                     }
                 }
             }
