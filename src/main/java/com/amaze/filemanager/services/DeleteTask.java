@@ -71,7 +71,7 @@ public class DeleteTask extends AsyncTask<ArrayList<BaseFile>, String, Boolean> 
 
         mBuilder = new NotificationCompat.Builder(this.cd);
         mBuilder.setContentIntent(pendingIntent);
-        mBuilder.setSmallIcon(R.drawable.ic_content_copy_white_36dp);
+        mBuilder.setSmallIcon(R.drawable.ic_delete_white_36dp);
         mBuilder.setContentTitle(utils.getString(cd, R.string.deleting));
         mBuilder.setContentText(utils.getString(cd, R.string.deleting));
 

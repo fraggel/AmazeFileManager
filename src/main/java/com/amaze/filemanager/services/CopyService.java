@@ -92,9 +92,9 @@ public class CopyService extends Service {
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
         mBuilder = new NotificationCompat.Builder(c);
         mBuilder.setContentIntent(pendingIntent);
-        mBuilder.setContentTitle(getResources().getString(R.string.copying))
+        mBuilder.setContentTitle(getResources().getString(R.string.copying));
+        mBuilder.setSmallIcon(R.drawable.ic_content_copy_white_36dp);
 
-                .setSmallIcon(R.drawable.ic_content_copy_white_36dp);
         if(foreground){
             startForeground(Integer.parseInt("456"+startId),mBuilder.build());
             foreground=false;
@@ -175,6 +175,14 @@ public class CopyService extends Service {
                 toDelete=new ArrayList<>();
             }
 
+            /**
+             * Calculate total amount of bytes to be copied/moved
+             * Updates totalBytes of progressHandles if provided
+             * ToDo: enable in root
+             * @param files
+             * @param progressHandler
+             * @return
+             */
             long getTotalBytes(final ArrayList<BaseFile> files, final ProgressHandler progressHandler) {
                 calculatingTotalSize=true;
                 new Thread(new Runnable() {
@@ -188,9 +196,11 @@ public class CopyService extends Service {
                                     totalBytes = totalBytes + f1.folderSize();
                                 } else {
                                     totalBytes = totalBytes + f1.length();
+                                    //long lRootLength = RootTools.getSpace(fi.getpa);
                                 }
                             }
-                            progressHandler.setTotalSize(totalBytes);
+                            if(progressHandler != null)
+                                progressHandler.setTotalSize(totalBytes);
                         } catch (Exception e) {
                         }
                         Copy.this.totalBytes=totalBytes;
@@ -276,6 +286,12 @@ public class CopyService extends Service {
                 }
                 else if (rootmode)                                                                  //Cuando el destino es una carpeta que necesita root
                 {
+                    String totalBytes =  utils.readableFileSize(getTotalBytes(files, null));
+
+                    int id1 = Integer.parseInt("456" + id);
+                    mBuilder.setContentText(totalBytes);
+                    mNotifyManager.notify(id1, mBuilder.build());                                   //Toast.makeText(cd, utils.getString(cd, R.string.error), Toast.LENGTH_SHORT).show();
+
                     for (int i = 0; i < files.size(); i++) {
                         String path=files.get(i).getPath();
                         String name=files.get(i).getName();
@@ -330,9 +346,9 @@ public class CopyService extends Service {
              *          while (!cmdCapture.isFinished()){}
              *
              * Different approaches:
-             *      -a: tries to preserve file structure but skips symlinks files in recursive folders
+             *      -a: tries to preserve file structure. Does not copy symlinks when copying to external/internal (fat32)
              *      -rp: same as above but copies symlinks as a regular file
-             *      -drp: same as above but preserving links. Does not work on directories          //Caveat: -r could fail in /dev/console. Use -R instead
+             *      -drp: same as above but preserving links. Does not work on directories          //Caveat: -r could fail in /dev/console. Use -R instead //test ls -la
              * @param bfSource
              * @param sDestination
              * @param bRw
@@ -349,28 +365,23 @@ public class CopyService extends Service {
 
                 Log.e("Root Copy", path);
 
-                if (bfSource.isDirectory())
+                try
                 {
-                    try
-                    {
-                        if(bRw)
-                            RootTools.remount(sTargetPath,"rw");
+                    if(bRw)
+                        RootTools.remount(sTargetPath,"rw");
 
-                        String command = "cp -a " + sSource + " " + sTarget;                        //Recursive copy maintaining permissions
-                        String sResult = shellExec(command, true);
+                    String command = "cp -a " + sSource + " " + sTarget;                            //Recursive copy maintaining permissions
+                    String sResult = shellExec(command, true);
 
-                        if(bRw)
-                            RootTools.remount(sTargetPath,"ro");                                    //only if its not root
+                    if(bRw)
+                        RootTools.remount(sTargetPath,"ro");                                        //only if its not root
 
-                        return true;
-                    }
-                    catch(Exception e1)
-                    {
-                        return false;
-                    }
+                    return true;
                 }
-                else
-                    return RootTools.copyFile(sSource, sTarget, bRw, true);                         //Indicamos que deberá hacer un remount RW
+                catch(Exception e1)
+                {
+                    return false;
+                }
             }
 
             private void copyFiles(final BaseFile sourceFile,final HFile targetFile,BufferHandler bufferHandler, GenericCopyThread copyThread, ProgressHandler progressHandler,final int id) throws IOException {
@@ -486,8 +497,10 @@ public class CopyService extends Service {
 
 
     void generateNotification(ArrayList<HFile> failedOps,boolean move) {
-        if(failedOps.size()==0)return;
-                mNotifyManager.cancelAll();
+        if(failedOps.size()==0)
+            return;
+
+        mNotifyManager.cancelAll();
         NotificationCompat.Builder mBuilder=new NotificationCompat.Builder(c);
         mBuilder.setContentTitle("Operation Unsuccessful");
         mBuilder.setContentText("Some files weren't %s successfully".replace("%s",move?"moved":"copied"));
@@ -547,6 +560,7 @@ public class CopyService extends Service {
             }
         } else publishCompletedResult(id, Integer.parseInt("456" + id));
     }
+
     public void publishCompletedResult(int id,int id1){
         try {
             mNotifyManager.cancel(id1);
